@@ -1,0 +1,125 @@
+
+import pandas as pd
+import numpy as np
+
+
+# Lê o arquivo csv e armazena os dados em um DataFrame
+df = pd.read_csv(
+    "base_ipea.csv",
+    encoding='ISO-8859-1',
+    sep=";"
+    )
+
+# Remove os espaços no nome das colunas
+df.columns = df.columns.str.strip()
+
+#  Calcula quantas linhas e colunas o arquivo possui
+linhas, colunas = df.shape
+print(f"A base possui {linhas} linhas e {colunas} colunas\n")
+
+
+# Calcula a frequência de pessoas em cada região do Brasil
+freq_regiao = df["região onde foi realizada a entrevista"].value_counts()
+print(freq_regiao)
+
+
+# Mostra a região mais frequente (moda)
+regiao_moda = freq_regiao.index[0]
+print("\nA região mais frequente é:", regiao_moda)
+
+
+# Idade da pessoa mais nova na amostra
+idade_min = df["idade: qual a sua idade (em anos completos)?"].min()
+
+# Idade da pessoa mais velha na amostra
+idade_max = df["idade: qual a sua idade (em anos completos)?"].max()
+
+# Imprime os resultados
+print("\nIdade da pessoa mais nova na amostra:", idade_min)
+print("Idade da pessoa mais velha na amostra:", idade_max)
+
+
+# Calcula a média, mediana e moda da variável idade
+media_idade = df["idade: qual a sua idade (em anos completos)?"].mean()
+mediana_idade = df["idade: qual a sua idade (em anos completos)?"].median()
+moda_idade = df["idade: qual a sua idade (em anos completos)?"].mode()[0]
+
+# Imprime os resultados
+print("\nMédia de idade: {:.2f}".format(media_idade))
+print("Mediana de idade: {:.0f}".format(mediana_idade))
+print("Moda de idade: {:.0f}".format(moda_idade))
+
+
+# Define as faixas etárias
+faixas_etarias = [
+    (0, 29),
+    (30, 59),
+    (60, df["idade: qual a sua idade (em anos completos)?"].max())
+    ]
+
+# Define os rótulos para as faixas etárias
+rotulos_faixas_etarias = [
+    "Jovens",
+    "Adultos",
+    "Idosos"
+]
+
+# Cria uma nova coluna no dataframe com a classificação das idades em faixas etárias
+df["Faixa Etária"] = pd.cut(df["idade: qual a sua idade (em anos completos)?"],
+                            bins=[0,29,59,df["idade: qual a sua idade (em anos completos)?"].max()],
+                            labels=rotulos_faixas_etarias
+                            )
+
+# Imprime as contagens de cada faixa etária
+print("\n")
+print(df["Faixa Etária"].value_counts())
+
+
+# Calcula a média, mediana e quartis para a variável "renda total de todos os moradores, parentes e agregados no último mês"
+media = df["renda total de todos os moradores (parentes e agregados) no último mês"].mean()
+mediana = df["renda total de todos os moradores (parentes e agregados) no último mês"].median()
+q1 = df["renda total de todos os moradores (parentes e agregados) no último mês"].quantile(0.25)
+q3 = df["renda total de todos os moradores (parentes e agregados) no último mês"].quantile(0.75)
+max = df["renda total de todos os moradores (parentes e agregados) no último mês"].max()
+min = df["renda total de todos os moradores (parentes e agregados) no último mês"].min()
+
+# Imprime os resultados
+print(f"\nMédia da renda total: R$ {media:.2f}")
+print(f"Mediana da renda total: R$ {mediana:.2f}")
+print(f"Primeiro quartil da renda total: R$ {q1:.2f}")
+print(f"Terceiro quartil da renda total: R$ {q3:.2f}")
+print(f"Valor máximo da renda total: R$ {max:.2f}")
+print(f"Valor mínimo da renda total: R$ {min:.2f}")
+
+# Interpretação dos quartis
+print(f"\nO primeiro quartil indica que 25% das pessoas têm renda total de até R$ {q1:.2f}")
+print(f"O terceiro quartil indica que 75% das pessoas têm renda total de até R$ {q3:.2f}")
+print('\n')
+
+# Calculando o coeficiente de variação
+def coeficiente_variacao(dados):
+    media = np.mean(dados)
+    desvio_padrao = np.std(dados)
+    coeficiente_variacao = (desvio_padrao / media) * 100
+    return coeficiente_variacao
+
+coef_renda = coeficiente_variacao(df["renda total de todos os moradores (parentes e agregados) no último mês"])
+print(f"Coeficiente de variação da renda total: {coef_renda:.3f}%")
+
+coef_idade = coeficiente_variacao(df["idade: qual a sua idade (em anos completos)?"])
+print(f"Coeficiente de variação da idade total: {coef_idade:.3f}%")
+print('\n')
+# compara os coeficientes de variação
+if coef_idade > coef_renda:
+    print("O coeficiente de variação da idade é maior.")
+else:
+    print("O coeficiente de variação da renda é maior.")
+    
+    
+# agrupando os dados por região e calculando o desvio-padrão para a renda
+desvios_padrao = df.groupby('região onde foi realizada a entrevista')['renda total de todos os moradores (parentes e agregados) no último mês'].std()
+
+# identificando a região que possui o menor desvio-padrão
+regiao_homogenea = desvios_padrao.idxmin()
+
+print(f"\nA região mais homogênea em relação à renda é {regiao_homogenea}.")
