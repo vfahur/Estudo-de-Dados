@@ -1,0 +1,28 @@
+import pandas as pd
+
+# Lê o arquivo csv e armazena os dados em um DataFrame
+df = pd.read_csv(
+    "vendas.csv",
+    encoding='utf-8',
+    sep=";",
+                 
+    )
+
+# Conta o total de vendas
+total_vendas = df['VALOR'].count()
+
+print("O total de vendas é:", total_vendas)
+
+----
+
+# Calcula a receita total das vendas
+receita_total= df['VALOR'].sum()
+
+print("A receita total das vendas é: R$", receita_total)
+
+----
+
+# Agrupando as vendas por dia e calculando a média das vendas diárias
+media_diaria= df.groupby(df.index)["VALOR"].mean()
+
+print(media_diaria)
